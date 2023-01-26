@@ -1,71 +1,69 @@
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.Runtime.InteropServices;
 
 namespace Seconds
 {
-    public partial class SystraySeconds 
+    public static class SystraySeconds 
     {
 
         [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = CharSet.Auto)]
         extern static bool DestroyIcon(IntPtr handle);
 
-        private System.Windows.Forms.Timer timer1;
+        private static readonly System.Threading.Timer updateTimer;
 
-        private int iconSize = 16;
-        private NotifyIcon notifyIcon;
-        private Icon? ico;
-        private Bitmap? bmp;
-        private Font iconFont;
+        private static readonly int iconSize = 16;
+        private static readonly NotifyIcon notifyIcon;
+        private static readonly Font iconFont;
 
-        public SystraySeconds()
+        static SystraySeconds()
         {
-            //InitializeComponent();
-            notifyIcon = new NotifyIcon();
+            notifyIcon = new NotifyIcon
+            {
+                Visible = true
+            };
             notifyIcon.MouseClick += notifyIcon_MouseClick;
-
-            iconFont = new Font("Consolas", 11, FontStyle.Bold, GraphicsUnit.Pixel);
-
-            timer1 = new System.Windows.Forms.Timer();
-            timer1.Interval = 1000;
-            timer1.Enabled = true;
-            timer1.Tick += timer1_Tick;
+            iconFont = new Font(FontFamily.GenericMonospace, 12, FontStyle.Bold, GraphicsUnit.Pixel);
+            updateTimer = new System.Threading.Timer(updateIcon, null, Timeout.Infinite, Timeout.Infinite);
         }
 
-        private void notifyIcon_MouseClick(object? sender, MouseEventArgs e)
+        public static void Run()
+        {
+            updateTimer.Change(0, 200);
+        }
+
+        private static void notifyIcon_MouseClick(object? sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right)
             {
+                updateTimer.Dispose();
                 Application.Exit();
             }
         }
 
-        private void timer1_Tick(object? sender, EventArgs e)
+        private static void updateIcon(object? state)
         {
-            if(notifyIcon != null)
-            {
-                updateIcon();
+            string currentSecond = DateTime.Now.Second.ToString("00");
 
-                if (!notifyIcon.Visible)
+            using (var bmp = new Bitmap(iconSize, iconSize))
+            {
+                using (Graphics g = Graphics.FromImage(bmp))
                 {
-                    notifyIcon.Visible = true;
+                    g.InterpolationMode = InterpolationMode.High;
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.TextRenderingHint = TextRenderingHint.AntiAliasGridFit; 
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+                    
+                    g.Clear(Color.BlanchedAlmond);
+                    g.DrawString(currentSecond, iconFont, Brushes.SaddleBrown, new PointF(-1.5f, 0));
                 }
+
+                notifyIcon.Icon = Icon.FromHandle(bmp.GetHicon());
+                DestroyIcon(notifyIcon.Icon.Handle);
             }
-        }
 
-        private void updateIcon()
-        {
-            if (bmp == null)
-            {
-                bmp = new Bitmap(iconSize, iconSize);
-            }
-            Graphics g = Graphics.FromImage(bmp);
-            g.FillRectangle(Brushes.White, 0, 0, iconSize, iconSize);
-            g.DrawString(DateTime.Now.Second.ToString("00"), iconFont, Brushes.Black, new PointF(0, 1));
-
-            ico = Icon.FromHandle(bmp.GetHicon());
-            notifyIcon.Icon = ico;
-
-            DestroyIcon(ico.Handle);
         }
     }
 }
