@@ -7,3 +7,5 @@ To stop the icon from being hidden inside the overflow menu, press Win+I to open
 If you want the program to start with Windows, create a shortcut in your Start-up folder inside the Windows Start menu. You can find it here: `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`
 
 Right click the icon to close the program.
+
+[<img src="https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-1.svg" height="50" align="right">](https://www.buymeacoffee.com/SpikeHimself)
